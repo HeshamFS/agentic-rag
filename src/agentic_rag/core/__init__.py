@@ -1,0 +1,91 @@
+"""Core abstractions and protocols for RAG Optimizer."""
+
+from agentic_rag.core.events import (
+    Event,
+    EventBus,
+    EventCollector,
+    EventLogger,
+    EventType,
+    get_event_bus,
+)
+from agentic_rag.core.models import (
+    Chunk,
+    Document,
+    EvaluationResult,
+    GenerationResult,
+    PipelineStep,
+    PipelineTrace,
+    QueryIntent,
+    RAGConfig,
+    ReflectionToken,
+    RetrievalDecision,
+    RetrievalResult,
+)
+from agentic_rag.core.protocols import (
+    Chunker,
+    Compressor,
+    Embedder,
+    Evaluator,
+    Generator,
+    Reranker,
+    Retriever,
+    VectorDB,
+)
+from agentic_rag.core.registry import (
+    ComponentRegistry,
+    chunker_registry,
+    embedder_registry,
+    generator_registry,
+    get_registry,
+    register_chunker,
+    register_embedder,
+    register_generator,
+    register_reranker,
+    register_retriever,
+    reranker_registry,
+    retriever_registry,
+)
+
+__all__ = [
+    # Models
+    "Document",
+    "Chunk",
+    "RetrievalResult",
+    "GenerationResult",
+    "EvaluationResult",
+    "ReflectionToken",
+    "QueryIntent",
+    "RetrievalDecision",
+    "PipelineStep",
+    "PipelineTrace",
+    "RAGConfig",
+    # Protocols
+    "Embedder",
+    "Chunker",
+    "Retriever",
+    "Reranker",
+    "Compressor",
+    "Generator",
+    "Evaluator",
+    "VectorDB",
+    # Events
+    "Event",
+    "EventType",
+    "EventBus",
+    "EventLogger",
+    "EventCollector",
+    "get_event_bus",
+    # Registry
+    "ComponentRegistry",
+    "get_registry",
+    "embedder_registry",
+    "retriever_registry",
+    "generator_registry",
+    "chunker_registry",
+    "reranker_registry",
+    "register_embedder",
+    "register_retriever",
+    "register_generator",
+    "register_chunker",
+    "register_reranker",
+]

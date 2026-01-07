@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Optimizer - Test UI</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #00d4ff;
+        }
+
+        .panels {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            height: calc(100vh - 120px);
+        }
+
+        .panel {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel h2 {
+            margin-bottom: 15px;
+            color: #00d4ff;
+            font-size: 1.1rem;
+        }
+
+        /* Upload Panel */
+        .upload-zone {
+            border: 2px dashed #444;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+
+        .upload-zone:hover {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .upload-zone.dragover {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.2);
+        }
+
+        .upload-zone input {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .file-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            background: #1a1a2e;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        .file-item.uploading {
+            opacity: 0.6;
+        }
+
+        .file-item.cached {
+            border-left: 3px solid #fbbf24;
+        }
+
+        .file-item .status {
+            color: #4ade80;
+            font-size: 0.75rem;
+        }
+
+        .file-item .status.error {
+            color: #f87171;
+        }
+
+        .file-item .status.cached {
+            color: #fbbf24;
+        }
+
+        /* Chat Panel */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 90%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.5;
+        }
+
+        .message.user {
+            background: #00d4ff;
+            color: #000;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant {
+            background: #2d3748;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        /* Expandable Sections */
+        .expandable-section {
+            margin-top: 12px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #1a1a2e;
+        }
+
+        .expandable-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            user-select: none;
+        }
+
+        .expandable-header:hover {
+            background: #252d3d;
+        }
+
+        .expandable-header .icon {
+            transition: transform 0.2s;
+        }
+
+        .expandable-section.expanded .expandable-header .icon {
+            transform: rotate(180deg);
+        }
+
+        .expandable-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .expandable-section.expanded .expandable-content {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .expandable-inner {
+            padding: 12px;
+            border-top: 1px solid #333;
+        }
+
+        /* Pipeline Steps */
+        .pipeline-section .expandable-header {
+            color: #a78bfa;
+        }
+
+        .pipeline-step {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .pipeline-step:last-child {
+            border-bottom: none;
+        }
+
+        .pipeline-step .step-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #a78bfa;
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .pipeline-step .step-info {
+            flex: 1;
+        }
+
+        .pipeline-step .step-name {
+            font-weight: 500;
+            color: #eee;
+        }
+
+        .pipeline-step .step-details {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .pipeline-step .step-time {
+            font-size: 0.8rem;
+            color: #a78bfa;
+            font-weight: 500;
+        }
+
+        /* Query Variations */
+        .queries-section .expandable-header {
+            color: #34d399;
+        }
+
+        .query-item {
+            background: #252d3d;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .query-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .query-number {
+            background: #34d399;
+            color: #000;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .query-text {
+            color: #ccc;
+        }
+
+        /* Intermediate Answers */
+        .intermediate-answer {
+            background: #252d3d;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .intermediate-answer:last-child {
+            margin-bottom: 0;
+        }
+
+        .ia-query {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            background: #1e2a3a;
+            border-bottom: 1px solid #333;
+        }
+
+        .ia-query-text {
+            color: #34d399;
+            font-weight: 500;
+        }
+
+        .ia-answer {
+            padding: 12px;
+            color: #ccc;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        /* Thinking Section */
+        .thinking-section .expandable-header {
+            color: #f472b6;
+        }
+
+        .thinking-content {
+            font-size: 0.85rem;
+            color: #aaa;
+            white-space: pre-wrap;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            line-height: 1.6;
+        }
+
+        /* Sources */
+        .sources-section .expandable-header {
+            color: #00d4ff;
+        }
+
+        .source-item {
+            background: #252d3d;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .source-item:hover {
+            background: #2d3d4d;
+        }
+
+        .source-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .source-item .source-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .source-item .source-title {
+            font-weight: 500;
+            color: #00d4ff;
+        }
+
+        .source-item .source-score {
+            font-size: 0.75rem;
+            color: #888;
+        }
+
+        .source-item .source-content {
+            color: #aaa;
+            font-size: 0.8rem;
+            margin-top: 6px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .source-item.expanded .source-content {
+            -webkit-line-clamp: unset;
+        }
+
+        /* Response Text */
+        .response-text {
+            margin-bottom: 12px;
+            padding: 12px;
+            background: rgba(0, 212, 255, 0.05);
+            border-left: 3px solid #00d4ff;
+            border-radius: 0 8px 8px 0;
+            line-height: 1.7;
+        }
+
+        .response-label {
+            color: #00d4ff;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 10px;
+            padding-top: 15px;
+            border-top: 1px solid #2d3748;
+            margin-top: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            background: #1a1a2e;
+            color: #eee;
+            font-size: 1rem;
+        }
+
+        .chat-input input:focus {
+            outline: 2px solid #00d4ff;
+        }
+
+        .chat-input button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: #00d4ff;
+            color: #000;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .chat-input button:hover {
+            background: #00b8e6;
+        }
+
+        .chat-input button:disabled {
+            background: #444;
+            cursor: not-allowed;
+        }
+
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #444;
+            border-top-color: #00d4ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Collection selector */
+        .collection-select {
+            margin-bottom: 15px;
+        }
+
+        .collection-select select {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background: #1a1a2e;
+            color: #eee;
+            font-size: 0.9rem;
+        }
+
+        .collection-select select:focus {
+            outline: 2px solid #00d4ff;
+        }
+
+        /* Status bar */
+        .status-bar {
+            text-align: center;
+            padding: 8px;
+            background: #0f3460;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+        }
+
+        .status-bar.connected {
+            background: #064e3b;
+        }
+
+        .status-bar.error {
+            background: #7f1d1d;
+        }
+
+        /* Total time badge */
+        .total-time {
+            display: inline-block;
+            background: #a78bfa;
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RAG Optimizer Test UI</h1>
+
+        <div class="panels">
+            <!-- Left Panel - Upload -->
+            <div class="panel">
+                <h2>Upload Documents</h2>
+
+                <div class="status-bar" id="statusBar">Checking connection...</div>
+
+                <div class="collection-select">
+                    <select id="collectionSelect">
+                        <option value="test-ui">test-ui (default)</option>
+                    </select>
+                </div>
+
+                <div class="upload-zone" id="uploadZone">
+                    <input type="file" id="fileInput" accept=".pdf,.docx,.txt,.md">
+                    <div class="upload-icon">📄</div>
+                    <div>Drop PDF here or click to upload</div>
+                </div>
+
+                <div class="file-list" id="fileList"></div>
+            </div>
+
+            <!-- Right Panel - Chat -->
+            <div class="panel">
+                <h2>Ask Questions</h2>
+
+                <div class="chat-container">
+                    <div class="messages" id="messages">
+                        <div class="message assistant">
+                            Welcome! Upload a PDF document, then ask me any question about it. I'll show you exactly where I found the information with full pipeline transparency.
+                        </div>
+                    </div>
+
+                    <div class="chat-input">
+                        <input type="text" id="questionInput" placeholder="Ask a question about your documents..." />
+                        <button id="sendBtn">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+
+        // Elements
+        const statusBar = document.getElementById('statusBar');
+        const collectionSelect = document.getElementById('collectionSelect');
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const messages = document.getElementById('messages');
+        const questionInput = document.getElementById('questionInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        // Check API health
+        async function checkHealth() {
+            try {
+                const res = await fetch(`${API_BASE}/health`);
+                const data = await res.json();
+                if (data.status === 'healthy') {
+                    statusBar.textContent = 'Connected to API';
+                    statusBar.className = 'status-bar connected';
+                    loadCollections();
+                } else {
+                    throw new Error('API not ready');
+                }
+            } catch (e) {
+                statusBar.textContent = 'API not connected - start the server';
+                statusBar.className = 'status-bar error';
+            }
+        }
+
+        // Load collections
+        async function loadCollections() {
+            try {
+                const res = await fetch(`${API_BASE}/collections`);
+                const data = await res.json();
+
+                // Add existing collections to dropdown
+                data.collections.forEach(name => {
+                    if (name !== 'test-ui') {
+                        const option = document.createElement('option');
+                        option.value = name;
+                        option.textContent = name;
+                        collectionSelect.appendChild(option);
+                    }
+                });
+
+                // Load documents for default collection
+                await loadDocuments(collectionSelect.value);
+            } catch (e) {
+                console.error('Failed to load collections:', e);
+            }
+        }
+
+        // Load documents from collection
+        async function loadDocuments(collection) {
+            try {
+                const res = await fetch(`${API_BASE}/collections/${collection}/documents`);
+                const data = await res.json();
+
+                // Clear current file list
+                fileList.innerHTML = '';
+
+                // Add documents to file list
+                if (data.documents && data.documents.length > 0) {
+                    data.documents.forEach(doc => {
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'file-item';
+                        fileItem.innerHTML = `
+                            <div><strong>${escapeHtml(doc.filename)}</strong></div>
+                            <div class="status" style="color: #4ade80;">✓ ${doc.chunk_count} chunks (loaded from DB)</div>
+                        `;
+                        fileList.appendChild(fileItem);
+                    });
+                }
+            } catch (e) {
+                console.error('Failed to load documents:', e);
+            }
+        }
+
+        // Reload documents when collection changes
+        collectionSelect.addEventListener('change', (e) => {
+            loadDocuments(e.target.value);
+        });
+
+        // File upload handling
+        uploadZone.addEventListener('click', () => fileInput.click());
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                uploadFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                uploadFile(e.target.files[0]);
+            }
+        });
+
+        async function uploadFile(file) {
+            const collection = collectionSelect.value;
+
+            // Add to file list
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item uploading';
+            fileItem.innerHTML = `
+                <div><strong>${file.name}</strong></div>
+                <div class="status"><span class="loading"></span> Uploading...</div>
+            `;
+            fileList.prepend(fileItem);
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('collection', collection);
+
+                const res = await fetch(`${API_BASE}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    fileItem.classList.remove('uploading');
+
+                    if (data.cached) {
+                        // Document was already embedded
+                        fileItem.classList.add('cached');
+                        fileItem.querySelector('.status').innerHTML = `
+                            <span class="cached">⚡ Already embedded (cached)</span>
+                        `;
+                    } else {
+                        // Newly processed
+                        fileItem.querySelector('.status').innerHTML = `
+                            <span style="color: #4ade80;">✓ ${data.chunks_created} chunks created (${data.processing_time_sec}s)</span>
+                        `;
+                    }
+                } else {
+                    throw new Error(data.detail || 'Upload failed');
+                }
+            } catch (e) {
+                fileItem.classList.remove('uploading');
+                fileItem.querySelector('.status').className = 'status error';
+                fileItem.querySelector('.status').textContent = `✗ ${e.message}`;
+            }
+        }
+
+        // Chat handling
+        sendBtn.addEventListener('click', sendQuestion);
+        questionInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendQuestion();
+        });
+
+        async function sendQuestion() {
+            const question = questionInput.value.trim();
+            if (!question) return;
+
+            const collection = collectionSelect.value;
+
+            // Add user message
+            addMessage(question, 'user');
+            questionInput.value = '';
+            sendBtn.disabled = true;
+
+            // Add loading message
+            const loadingMsg = addMessage('<span class="loading"></span> Thinking...', 'assistant');
+
+            try {
+                const res = await fetch(`${API_BASE}/query`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        question: question,
+                        collection: collection,
+                        top_k: 5
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.response) {
+                    // Remove loading message
+                    loadingMsg.remove();
+
+                    // Add response with all details
+                    addMessageWithDetails(data);
+                } else {
+                    throw new Error(data.detail || 'Query failed');
+                }
+            } catch (e) {
+                loadingMsg.remove();
+                addMessage(`Error: ${e.message}`, 'assistant');
+            } finally {
+                sendBtn.disabled = false;
+                questionInput.focus();
+            }
+        }
+
+        function addMessage(content, type) {
+            const msg = document.createElement('div');
+            msg.className = `message ${type}`;
+            msg.innerHTML = content;
+            messages.appendChild(msg);
+            messages.scrollTop = messages.scrollHeight;
+            return msg;
+        }
+
+        function createExpandableSection(title, icon, colorClass, content, defaultExpanded = false) {
+            return `
+                <div class="expandable-section ${colorClass} ${defaultExpanded ? 'expanded' : ''}">
+                    <div class="expandable-header" onclick="this.parentElement.classList.toggle('expanded')">
+                        <span>${icon} ${title}</span>
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="expandable-content">
+                        <div class="expandable-inner">
+                            ${content}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function addMessageWithDetails(data) {
+            const msg = document.createElement('div');
+            msg.className = 'message assistant';
+
+            // Format response (basic markdown support)
+            let formattedResponse = data.response
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>');
+
+            // Calculate total time from pipeline steps
+            let totalTime = 0;
+            if (data.pipeline_steps && data.pipeline_steps.length > 0) {
+                totalTime = data.pipeline_steps.reduce((sum, step) => sum + step.duration_ms, 0);
+            }
+
+            let html = `
+                <div class="response-label">✨ Answer</div>
+                <div class="response-text">${formattedResponse}</div>
+            `;
+
+            // Pipeline Steps Section
+            if (data.pipeline_steps && data.pipeline_steps.length > 0) {
+                const stepsHtml = data.pipeline_steps.map((step, i) => `
+                    <div class="pipeline-step">
+                        <div class="step-icon">${i + 1}</div>
+                        <div class="step-info">
+                            <div class="step-name">${escapeHtml(step.name)}</div>
+                            <div class="step-details">${formatStepDetails(step.details)}</div>
+                        </div>
+                        <div class="step-time">${step.duration_ms.toFixed(0)}ms</div>
+                    </div>
+                `).join('');
+
+                html += createExpandableSection(
+                    `Pipeline Steps <span class="total-time">${totalTime.toFixed(0)}ms total</span>`,
+                    '⚙️',
+                    'pipeline-section',
+                    stepsHtml,
+                    false
+                );
+            }
+
+            // Intermediate Answers Section (Multi-Query with answers)
+            if (data.intermediate_answers && data.intermediate_answers.length > 0) {
+                const answersHtml = data.intermediate_answers.map((ia, i) => `
+                    <div class="intermediate-answer">
+                        <div class="ia-query">
+                            <span class="query-number">${i + 1}</span>
+                            <span class="ia-query-text">${escapeHtml(ia.query)}</span>
+                        </div>
+                        <div class="ia-answer">${escapeHtml(ia.answer)}</div>
+                    </div>
+                `).join('');
+
+                html += createExpandableSection(
+                    `Query Variations & Answers (${data.intermediate_answers.length})`,
+                    '🔀',
+                    'queries-section',
+                    answersHtml,
+                    false
+                );
+            } else if (data.query_variations && data.query_variations.length > 1) {
+                // Fallback to just showing variations if no intermediate answers
+                const queriesHtml = data.query_variations.map((q, i) => `
+                    <div class="query-item">
+                        <div class="query-number">${i + 1}</div>
+                        <div class="query-text">${escapeHtml(q)}</div>
+                    </div>
+                `).join('');
+
+                html += createExpandableSection(
+                    `Query Variations (${data.query_variations.length})`,
+                    '🔀',
+                    'queries-section',
+                    queriesHtml,
+                    false
+                );
+            }
+
+            // Thinking Section
+            if (data.thinking && data.thinking.trim()) {
+                html += createExpandableSection(
+                    'Thinking',
+                    '🧠',
+                    'thinking-section',
+                    `<div class="thinking-content">${escapeHtml(data.thinking)}</div>`,
+                    false
+                );
+            }
+
+            // Sources Section - show ALL sources so citations match
+            if (data.sources && data.sources.length > 0) {
+                const sourcesHtml = data.sources.map((s, i) => `
+                    <div class="source-item" onclick="this.classList.toggle('expanded')">
+                        <div class="source-header">
+                            <span class="source-title">Source ${i + 1} - ${escapeHtml(s.metadata?.filename || s.document_id || 'Unknown')}</span>
+                            <span class="source-score">${s.score ? `Score: ${(s.score * 100).toFixed(1)}%` : ''}</span>
+                        </div>
+                        <div class="source-content">${escapeHtml(s.content)}</div>
+                    </div>
+                `).join('');
+
+                html += createExpandableSection(
+                    `Sources (${data.sources.length})`,
+                    '📚',
+                    'sources-section',
+                    sourcesHtml,
+                    true
+                );
+            }
+
+            msg.innerHTML = html;
+            messages.appendChild(msg);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function formatStepDetails(details) {
+            if (!details) return '';
+
+            const parts = [];
+            if (details.chunks_retrieved !== undefined) {
+                parts.push(`${details.chunks_retrieved} chunks`);
+            }
+            if (details.input_chunks !== undefined && details.output_chunks !== undefined) {
+                parts.push(`${details.input_chunks} → ${details.output_chunks} chunks`);
+            }
+            if (details.query_variations && details.query_variations.length > 0) {
+                parts.push(`${details.query_variations.length} query variations`);
+            }
+            if (details.context_chunks !== undefined) {
+                parts.push(`${details.context_chunks} context chunks`);
+            }
+            if (details.provider) {
+                parts.push(details.provider);
+            }
+            if (details.entities !== undefined) {
+                parts.push(`${details.entities} entities`);
+            }
+            return parts.join(' · ');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize
+        checkHealth();
+    </script>
+</body>
+</html>
