@@ -207,7 +207,8 @@ Sentences:
 
         # Combine with source info
         scored_sentences = [
-            (sent, cidx, sidx, score) for (sent, cidx, sidx), score in zip(all_sentences, scores, strict=False)
+            (sent, cidx, sidx, score)
+            for (sent, cidx, sidx), score in zip(all_sentences, scores, strict=False)
         ]
 
         # Sort by score descending

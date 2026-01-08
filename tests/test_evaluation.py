@@ -15,11 +15,15 @@ import pytest
 
 from agentic_rag.core.models import Chunk, GenerationResult, RetrievalResult
 from agentic_rag.evaluation.benchmarks import (
-    HotPotQA,
-    NaturalQuestions,
-    RAGBenchmark,
+    HotPotQA as HotPotQABenchmark,
 )
-from agentic_rag.evaluation.nli import NLIVerifier
+from agentic_rag.evaluation.benchmarks import (
+    NaturalQuestions as NaturalQuestionsBenchmark,
+)
+from agentic_rag.evaluation.benchmarks import (
+    RAGBenchmark as BenchmarkRunner,
+)
+from agentic_rag.evaluation.nli import NLIVerifier as NLIEvaluator
 from agentic_rag.evaluation.ragas import RAGASEvaluator
 from agentic_rag.evaluation.self_rag import SelfRAGEvaluator
 

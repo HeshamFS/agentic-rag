@@ -855,7 +855,9 @@ async def search(request: SearchRequest) -> SearchResponse:
                 # Create new results with reranked scores
                 results = [
                     (chunk, score)
-                    for chunk, score in zip(rerank_result.chunks, rerank_result.scores, strict=False)
+                    for chunk, score in zip(
+                        rerank_result.chunks, rerank_result.scores, strict=False
+                    )
                 ]
                 logger.info(
                     f"SEARCH: Reranked to {len(results)} results in {time.time() - step_start:.2f}s"

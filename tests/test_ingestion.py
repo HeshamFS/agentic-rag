@@ -291,9 +291,9 @@ Final paragraph."""
         assert result.success
         assert result.document is not None
         assert "source" in result.document.metadata or "filename" in result.document.metadata
-        assert result.document.metadata.get("extension") == ".pdf" or attention_paper_path.suffix in str(
-            result.document.metadata
-        )
+        assert result.document.metadata.get(
+            "extension"
+        ) == ".pdf" or attention_paper_path.suffix in str(result.document.metadata)
 
     # -------------------------------------------------------------------------
     # Error Handling Tests

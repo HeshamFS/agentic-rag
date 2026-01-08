@@ -85,7 +85,9 @@ class BaseReranker(ABC):
         filtered_scores = []
         filtered_indices = []
 
-        for chunk, score, idx in zip(result.chunks, result.scores, result.original_indices, strict=False):
+        for chunk, score, idx in zip(
+            result.chunks, result.scores, result.original_indices, strict=False
+        ):
             if score >= threshold:
                 filtered_chunks.append(chunk)
                 filtered_scores.append(score)

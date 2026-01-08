@@ -137,9 +137,7 @@ class RAPTORRetriever:
             retrieval_type="raptor_collapsed",
             metadata={
                 "mode": "collapsed",
-                "levels_searched": list(
-                    {c.metadata.get("raptor_level", 0) for c in unique_chunks}
-                ),
+                "levels_searched": list({c.metadata.get("raptor_level", 0) for c in unique_chunks}),
             },
         )
 
