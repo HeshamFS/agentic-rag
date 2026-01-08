@@ -99,9 +99,11 @@ def retriever(embedder, vectordb, settings):
 # =============================================================================
 
 
+@pytest.mark.integration
 class TestRealPDFIngestion:
     """Test PDF ingestion with real academic papers."""
 
+    @pytest.mark.skip(reason="Requires test PDF files to be downloaded")
     def test_pdf_files_exist(self):
         """Verify test PDFs are available."""
         expected_papers = [
@@ -212,8 +214,9 @@ class TestRealChunking:
 # =============================================================================
 
 
+@pytest.mark.integration
 class TestRealVectorDB:
-    """Test Qdrant operations with real data."""
+    """Test Qdrant operations with real data. Requires running Qdrant server."""
 
     @pytest.mark.asyncio
     async def test_create_and_delete_collection(self, vectordb, embedder):
@@ -351,8 +354,9 @@ class TestRealVectorDB:
 # =============================================================================
 
 
+@pytest.mark.integration
 class TestFullPipeline:
-    """End-to-end pipeline tests with real components."""
+    """End-to-end pipeline tests with real components. Requires running Qdrant server."""
 
     @pytest.mark.asyncio
     async def test_ingest_and_retrieve(self, file_loader, chunker, embedder, vectordb):
@@ -464,8 +468,9 @@ class TestFullPipeline:
 # =============================================================================
 
 
+@pytest.mark.integration
 class TestMultiPaperIngestion:
-    """Test ingesting and querying across multiple papers."""
+    """Test ingesting and querying across multiple papers. Requires running Qdrant server."""
 
     @pytest.mark.asyncio
     async def test_ingest_multiple_papers(self, file_loader, chunker, embedder, vectordb):
@@ -530,8 +535,9 @@ class TestMultiPaperIngestion:
 # =============================================================================
 
 
+@pytest.mark.integration
 class TestPipelinePerformance:
-    """Performance tests for the pipeline."""
+    """Performance tests for the pipeline. Requires running Qdrant server."""
 
     @pytest.mark.asyncio
     async def test_ingestion_speed(self, file_loader, chunker, embedder):

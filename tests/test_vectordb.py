@@ -29,12 +29,14 @@ def mock_qdrant_client():
     with patch("agentic_rag.vectordb.qdrant_client.AsyncQdrantClient") as mock:
         client = MagicMock()
 
-        # Mock collections response
+        # Mock collections response - use proper string names, not MagicMock
+        collection1_mock = MagicMock()
+        collection1_mock.name = "collection1"  # Set actual string value
+        collection2_mock = MagicMock()
+        collection2_mock.name = "collection2"  # Set actual string value
+
         mock_collections = MagicMock()
-        mock_collections.collections = [
-            MagicMock(name="collection1"),
-            MagicMock(name="collection2"),
-        ]
+        mock_collections.collections = [collection1_mock, collection2_mock]
         client.get_collections = AsyncMock(return_value=mock_collections)
 
         # Mock collection info
